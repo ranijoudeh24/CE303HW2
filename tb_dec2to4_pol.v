@@ -1,46 +1,40 @@
-// tb_dec2to4_pol.v (aligned timing)
+// tb_dec2to4_pol.v
 `timescale 1ns/1ps
 
 module tb_dec2to4_pol;
     reg  A2, A1, A0;
     wire [3:0] D;
     reg  [3:0] expected;
-    reg  [3:0] tmp;  // hold onehot() return for bit selects
+    reg  [3:0] tmp;  
     integer i;
 
-    // DUT
     dec2to4_pol dut(.A2(A2), .A1(A1), .A0(A0), .D(D));
 
-    // Helper: one-hot for {A1,A0}
     function [3:0] onehot;
         input [1:0] sel;
         begin
             case (sel)
-                2'b00: onehot = 4'b0001; // D0
-                2'b01: onehot = 4'b0010; // D1
-                2'b10: onehot = 4'b0100; // D2
-                2'b11: onehot = 4'b1000; // D3
+                2'b00: onehot = 4'b0001; 
+                2'b01: onehot = 4'b0010; 
+                2'b10: onehot = 4'b0100; 
+                2'b11: onehot = 4'b1000; 
             endcase
         end
     endfunction
 
     initial begin
-        // VCD for waveform viewing
         $dumpfile("tb_dec2to4_pol.vcd");
         $dumpvars(0, tb_dec2to4_pol);
 
         $display("A2 A1 A0 | D3 D2 D1 D0 | PASS");
 
-        // iterate all 8 combos; compute expected BEFORE the delay
         for (i=0; i<8; i=i+1) begin
             {A2,A1,A0} = i[2:0];
 
-            // expected for this vector
             tmp = onehot({A1,A0});
             expected = { tmp[3], tmp[2], tmp[0], tmp[1] };
             expected = (A2==1'b1) ? expected : ~expected;
 
-            // allow DUT to settle, then sample/print
             #1;
             $display("%0b  %0b  %0b |  %0b  %0b  %0b  %0b | %s",
                      A2,A1,A0, D[3],D[2],D[1],D[0], (D===expected) ? "OK" : "FAIL");
